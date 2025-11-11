@@ -1,0 +1,914 @@
+---
+title: "Estrutura de Custos no Transporte Rodoviário de Cargas"
+subtitle: "Logística de Transportes e Armazenagem"
+author: 
+  - <br></br>Renata Oliveira
+encoding: UTF-8
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: ["default", "xaringan-themer.css"]
+
+    nature:
+      ratio: "16:9"
+      highlightLines: true
+      highlightStyle: solarized-light
+      countIncrementalSlides: false
+      slideNumberFormat: |
+         <div class="progress-bar-container">
+           <div class="progress-bar" style="width: calc(%current% / %total% * 100%);">
+           </div>
+         </div>
+
+---
+
+```{R child = "setup.Rmd"}
+```
+
+```{r xaringan-tile-view, echo=FALSE}
+xaringanExtra::use_tile_view()
+```
+
+```{r xaringan-editable, echo=FALSE}
+xaringanExtra::use_editable(expires = 1)
+```
+
+```{r xaringan-panelset, echo=FALSE, message=FALSE, warning=FALSE}
+xaringanExtra::use_panelset()
+```
+
+```{r xaringanExtra-clipboard, echo=FALSE}
+htmltools::tagList(
+  xaringanExtra::use_clipboard(
+    button_text = "<i class=\"fa fa-clipboard\"></i>",
+    success_text = "<i class=\"fa fa-check\" style=\"color: #90BE6D\"></i>",
+    error_text = "<i class=\"fa fa-times-circle\" style=\"color: #F94144\"></i>"
+  ),
+  rmarkdown::html_dependency_font_awesome()
+)
+```
+
+```{r xaringan-fit-screen, echo=FALSE}
+xaringanExtra::use_fit_screen()
+```
+
+```{r xaringan-extra-styles, echo=FALSE}
+xaringanExtra::use_extra_styles(
+  hover_code_line = TRUE,         #<<
+  mute_unhighlighted_code = TRUE  #<<
+)
+```
+
+```{r xaringan-scribble, echo=FALSE}
+xaringanExtra::use_scribble()
+```
+
+
+## Componentes da Estrutura de Custos
+### Classificação dos Custos
+
+**Custos Fixos**
+
+- Não variam com a quilometragem rodada.  
+- Existem mesmo com o veículo parado   
+- Calculados geralmente por **mês**
+
+---
+
+## Componentes da Estrutura de Custos
+### Classificação dos Custos Fixos - Componentes
+
+.pull-left[
+**1. Depreciação**
+- Perda de valor do veículo
+- 15-20% do custo total
+- Depende do tempo e km rodado
+
+**2. Salários e Encargos**
+- Maior componente fixo
+- 20-25% do custo total
+]
+
+.pull-right[
+**3. Seguros**
+- Seguro do veículo
+- Seguro de carga
+- 5-10% do custo total
+
+**4. Licenciamento**
+- IPVA, taxas, inspeções
+- 2-3% do custo total
+]
+
+---
+
+## Componentes da Estrutura de Custos
+### Classificação dos Custos
+
+**Custos Variáveis**
+- Variam proporcionalmente à quilometragem
+- Quanto mais roda, maior o custo
+- Calculados por **km rodado**
+
+---
+
+## Componentes da Estrutura de Custos
+### Classificação dos Custos Variáveis - Componentes
+
+.pull-left[
+**1. Combustível**
+- Maior componente variável
+- 30-35% do custo total
+- Alta volatilidade
+
+**2. Manutenção**
+- Corretiva, preventiva, preditiva, prescritiva
+- 10-15% do custo total
+]
+
+.pull-right[
+**3. Pneus**
+- Substituição e recapagem
+- 4-6% do custo total
+
+**4. Pedágios**
+- Varia por rota
+- 2-5% do custo total
+]
+
+---
+
+## Componentes da Estrutura de Custos
+
+### Classificação dos Custos
+
+```{r custos-classificacao, fig.height=5, fig.width=7, echo=FALSE, message=FALSE, warning=FALSE}
+
+custos <- data.frame( Tipo = c("Fixos", "Fixos", "Fixos", "Fixos", "Variáveis", "Variáveis", "Variáveis", "Variáveis"), Componente = c("Depreciação", "Salários", "Seguros", "Licenciamento", "Combustível", "Manutenção", "Pneus", "Pedágios"), Percentual = c(15, 25, 8, 2, 30, 12, 5, 3) )
+
+ggplot(custos, aes(x = Componente, y = Percentual, fill = Tipo)) + geom_col() + coord_flip() + scale_fill_manual(values = c("Fixos" = "#2E86AB", "Variáveis" = "#A23B72")) + labs(title = "Distribuição Típica de Custos no Transporte Rodoviário", y = "Percentual (%)", x = "") + theme_minimal(base_size = 14) + theme(legend.position = "top")
+```
+
+---
+
+## Detalhamento dos Custos
+
+### 1. Combustível
+
+$$Custo_{combustível} = \frac{Distância \times Preço_{diesel}}{Consumo_{médio}}$$
+
+```{r echo=FALSE, message=TRUE, warning=FALSE}
+
+distancia <- 1000 # km 
+preco_diesel <- 6.50 # R$/litro 
+consumo_medio <- 3.5 # km/litro
+
+custo_combustivel <- (distancia * preco_diesel) / consumo_medio
+
+cat(sprintf("Distância: %d km\nPreço do diesel: R$ %.2f/litro\nConsumo médio: %.1f km/l\n\nCusto total de combustível: R$ %.2f", distancia, preco_diesel, consumo_medio, custo_combustivel))
+```
+--
+  
+**Custo por km:** R$ `r round(custo_combustivel/distancia, 2)`
+
+---
+
+## Detalhamento dos Custos
+
+### 2. Consumo por Tipo de Veículo
+
+```{r consumo-veiculos, echo=FALSE, message=FALSE, warning=FALSE}
+veiculos <- data.frame(Tipo = c("Truck (2 eixos)", "Toco (3 eixos)", "Bi-truck (4 eixos)", "Carreta (5 eixos)", "Bi-trem (7 eixos)", "Rodotrem (9 eixos)"),
+                       Consumo = c(5.5, 4.5, 3.8, 3.2, 2.8, 2.5),
+                       Capacidade = c(8, 13, 20, 27, 40, 57))
+
+ggplot(veiculos, aes(x = reorder(Tipo, -Consumo), y = Consumo)) +
+  geom_col(fill = "#2E86AB", alpha = 0.8) +
+  geom_text(aes(label = sprintf("%.1f km/l", Consumo)), vjust = 0, size = 4) +
+  labs(title = "Consumo Médio por Tipo de Veículo", y = "Consumo (km/litro)", x = "") +
+  theme_minimal(base_size = 14) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+---
+
+## Detalhamento dos Custos
+
+## 3. Depreciação
+
+.pull-left[
+.midi[
+$$Depreciação_{anual} = \frac{Valor_{compra} - Valor_{residual}}{Vida_{útil}}$$
+]
+]
+
+.pull-right[
+### Exemplo:
+```{r depreciacao, echo=FALSE, message=FALSE, warning=FALSE} 
+
+valor_compra <- 500000 # R$ 
+valor_residual <- 100000 # R$ (após 10 anos) 
+vida_util <- 10 # anos
+
+deprec_anual <- (valor_compra - valor_residual) / vida_util 
+deprec_mensal <- deprec_anual / 12
+
+resultados <- data.frame( Item = c("Valor de Compra", "Valor Residual", "Vida Útil", "Depreciação Anual", "Depreciação Mensal"), 
+                          Valor = c(valor_compra, valor_residual, vida_util, deprec_anual, deprec_mensal), 
+                          Unidade = c("R$", "R$", "anos", "R$/ano", "R$/mês") )
+
+kable(resultados, format = "html", col.names = c("Item", "Valor", "Unidade"), format.args = list(big.mark = ".", decimal.mark = ",")) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+]
+
+---
+
+## Detalhamento dos Custos
+
+### 4. Manutenção
+
+.pull-left[
+**Preventiva (70-80%)**
+- Troca de óleo
+- Filtros
+- Revisões programadas
+- Custos previsíveis
+
+**Estimativa:** R$ 0,15 - R$ 0,25/km
+]
+
+.pull-right[
+**Corretiva (20-30%)**
+- Reparos não programados
+- Quebras e falhas
+- Custos imprevisíveis
+
+**Estimativa:** R$ 0,05 - R$ 0,15/km
+]
+
+Custo Total de Manutenção:
+
+**Média: R$ 0,25 - R$ 0,40/km rodado**
+
+---
+
+## Detalhamento dos Custos
+
+### 5. Pneus
+
+```{r pneus, echo=FALSE, message=FALSE, warning=FALSE} 
+
+library(dplyr)
+
+estrategias <- data.frame( Estratégia = c("Pneus Novos", "Primeira Recapagem", "Segunda Recapagem", "Terceira Recapagem"), Vida_Util_km = c(100000, 80000, 70000, 60000), Custo_Unit = c(2500, 800, 700, 600), Num_Pneus = c(18, 18, 18, 18) )
+
+estrategias <- estrategias %>% 
+  mutate(Custo_Total = Custo_Unit * Num_Pneus, 
+         Custo_km = Custo_Total / Vida_Util_km )
+
+ggplot(estrategias, aes(x = Estratégia, y = Custo_km, fill = Estratégia)) +
+  geom_col(show.legend = FALSE) + geom_text(aes(label = sprintf("R$ %.3f/km", Custo_km)), vjust = 0, size = 4) +
+  scale_fill_brewer(palette = "Blues") + labs(title = "Custo por km de Diferentes Estratégias de Pneus", y = "Custo (R$/km)", x = "") +
+  theme_minimal(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+---
+
+## Detalhamento dos Custos
+
+### 6. Salários e Encargos
+
+```{r salarios, echo=FALSE, message=FALSE, warning=FALSE} 
+
+salario_base <- 4500 
+encargos_percent <- 0.90 # 90% de encargos
+
+componentes <- data.frame( Item = c("Salário Base", "FGTS (8%)", "INSS (27%)", "Férias + 1/3", "13º Salário", "Outros encargos"), Percentual = c(100, 8, 27, 11.1, 8.3, 35.6), Valor = c(4500, 360, 1215, 500, 375, 1600) )
+
+total_mensal <- sum(componentes$Valor)
+
+ggplot(componentes, aes(x = "", y = Valor, fill = Item)) + geom_bar(stat = "identity", width = 1) + coord_polar("y", start = 0) + scale_fill_brewer(palette = "Set3") + labs(title = sprintf("Custo Total Mensal com Motorista: R$ %.2f", total_mensal)) + theme_void(base_size = 12) + theme(legend.position = "right")
+
+```
+
+---
+
+## Detalhamento dos Custos
+
+### 7. Seguros
+
+| Seguro | Tipo | Cobertura |
+|--------|------|-----------|
+| RCTR-C | Obrigatório | Acidentes de trânsito |
+| RCF-DC | Facultativo | Roubo e desaparecimento |
+| Seguro de Carga | Facultativo | Cobertura total (cliente) |
+
+*RCTR-C = Responsabilidade Civil do Transportador Rodoviário de Cargas
+
+*RCF-DC = Responsabilidade Civil Facultativa do Transportador Rodoviário de Cargas
+
+*O RCTR-C tem uma tabela oficial com taxas que variam por estado de origem e destino. 
+RCTR-C (obrigatório): Taxas de 0,04% a 0,30% - cobre apenas acidentes.  
+RCF-DC (facultativo): Taxas de 0,10% a 1,50% - cobre roubo/furto
+
+---
+
+## Detalhamento dos Custos
+
+### 7. Seguros
+
+.pull-left[
+**Seguro do Veículo**
+- Cobertura total ou parcial
+- Franquia variável
+- 3-5% do valor do veículo/ano
+
+**Exemplo:**
+- Veículo: R$ 500.000
+- Prêmio anual: R$ 20.000 (4%)
+- Mensal: R$ 1.667
+]
+
+.pull-right[
+**Seguro de Carga (RCF-DC)**
+- Obrigatório por lei
+- Varia por tipo de carga
+- 0,1% a 0,5% do valor da carga
+
+**Exemplo:**
+- Carga: R$ 200.000
+- Taxa: 0,3%
+- Custo: R$ 600 por viagem
+]
+
+
+---
+
+
+## Fatores que Influenciam os Custos
+
+### 1. Como a quilometragem afeta o custo por km?
+
+```{r sensibilidade custo, echo=FALSE, message=FALSE, warning=FALSE}
+#Análise de sensibilidade
+km_range <- seq(5000, 20000)
+custo_fixo <- 15467
+
+sensibilidade <- data.frame( km_mes = km_range, custo_fixo_km = custo_fixo / km_range, custo_variavel_km = 2.80, custo_total_km = (custo_fixo / km_range) + 2.80 )
+
+ggplot(sensibilidade, aes(x = km_mes, y = custo_total_km)) +
+  geom_line(color = "#2E86AB", size = 1.5) +
+  geom_hline(yintercept = 2.80, linetype = "dashed", color = "#A23B72", size = 1) + annotate("text", x = 15000, y = 3.2, label = "Custo Variável (R$ 2,80/km)", color = "#A23B72") +
+  scale_y_continuous(labels = dollar_format(prefix = "R$ ")) + scale_x_continuous(labels = comma_format()) +
+  labs(title = "Impacto da Quilometragem no Custo por km", subtitle = "Quanto mais km/mês, menor o custo unitário", x = "Quilometragem Mensal (km)", y = "Custo Total por km (R$/km)") +
+  theme_minimal(base_size = 14)
+```
+
+---
+
+## Fatores que Influenciam os Custos
+### 2. Preço do Diesel
+
+```{r diesel-historico, echo=FALSE, message=FALSE, warning=FALSE}
+
+#Dados simulados de variação do diesel
+set.seed(123) 
+meses <- seq(as.Date("2023-01-01"), as.Date("2025-11-01"), by = "month") 
+preco_diesel <- 5.5 + cumsum(rnorm(length(meses), 0, 0.15))
+
+diesel_df <- data.frame( Data = meses, Preco = preco_diesel )
+
+ggplot(diesel_df, aes(x = Data, y = Preco)) + geom_line(color = "#2E86AB", size = 1.2) +
+  geom_smooth(method = "loess", se = TRUE, color = "#A23B72", linetype = "dashed") +
+  scale_y_continuous(labels = dollar_format(prefix = "R$ ")) +
+  labs(title = "Evolução do Preço do Diesel (2023-2025)", subtitle = "Alta volatilidade impacta diretamente o custo operacional", x = "Período", y = "Preço do Diesel (R$/litro)") +
+  theme_minimal(base_size = 14)
+```
+
+**Variação de 10% no diesel = Variação de 3-4% no custo total**
+
+---
+
+## Fatores que Influenciam os Custos
+
+.pull-left[
+### 3. Tipo de Carga
+
+.midi[
+**Carga Geral**
+- Maior flexibilidade
+- Custos padrão
+
+**Carga Refrigerada**
+- +30% no consumo
+- Manutenção especializada
+- Custo total +40-50%
+
+**Cargas Perigosas**
+- Seguro mais caro (+200%)
+- Licenças especiais
+- Treinamento adicional
+]]
+
+.pull-right[
+### 4. Perfil da Rota
+
+.midi[
+**Rotas Planas**
+- Consumo padrão
+- Menor desgaste
+
+**Rotas Montanhosas**
+- Consumo +20-30%
+- Maior desgaste de freios
+- Mais manutenção
+
+**Rotas Urbanas vs Rodoviárias**
+- Urbana: +15% consumo
+- Mais tempo de operação
+- Pedágios
+]]
+
+---
+
+## Fatores que Influenciam os Custos
+
+### 5. Extensão da rota
+
+```{r comparacao-rotas, echo=FALSE, message=FALSE, warning=FALSE} 
+comparacao <- data.frame( Tipo_Rota = rep(c("Curta Distância\n(< 300 km)", "Longa Distância\n(> 1000 km)"), each = 5), 
+                          Componente = rep(c("Combustível", "Pedágios", "Manutenção", "Depreciação", "Salários"), 2), 
+                          Percentual = c(25, 8, 15, 20, 32, 38, 5, 12, 15, 30))
+
+ggplot(comparacao, aes(x = Tipo_Rota, y = Percentual, fill = Componente)) + geom_col(position = "fill") + scale_y_continuous(labels = percent_format()) + scale_fill_brewer(palette = "Set2") + labs(title = "Distribuição de Custos por Tipo de Rota", subtitle = "Rotas longas têm maior peso de combustível", x = "", y = "Percentual do Custo Total") + theme_minimal(base_size = 14) + theme(legend.position = "right")
+```
+
+---
+
+## Estratégias de Redução de Custos
+
+### 6. Otimização de Combustível - Principais Ações
+
+.pull-left[
+**Tecnologia**
+- Telemetria e monitoramento
+- Controle de velocidade
+- Análise de condução
+
+**Economia esperada: 10-15%**
+]
+
+.pull-right[
+**Treinamento**
+- Direção econômica
+- Uso adequado de marchas
+- Manutenção de velocidade constante
+
+**Economia esperada: 5-8%**
+]
+
+---
+
+## Estratégias de Redução de Custos
+
+### 7. Otimização de Combustível
+
+```{r impacto-combustivel, echo=FALSE, message=FALSE, warning=FALSE} 
+cenarios <- data.frame( Cenario = c("Sem Otimização", "Com Telemetria", "+ Treinamento", "Melhor Cenário"), Consumo = c(3.2, 3.52, 3.68, 3.84), Reducao = c(0, 10, 15, 20) )
+
+#Cálculo de economia anual
+km_ano <- 120000 
+preco_diesel <- 6.50
+
+cenarios$Custo_Anual <- (km_ano / cenarios$Consumo) * preco_diesel 
+cenarios$Economia <- cenarios$Custo_Anual[1] - cenarios$Custo_Anual
+
+kable(cenarios, format = "html", col.names = c("Cenário", "Consumo (km/l)", "Redução (%)", "Custo Anual (R$)", "Economia (R$)"), digits = 2, format.args = list(big.mark = ".", decimal.mark = ",")) %>% kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+---
+
+## Estratégias de Redução de Custos
+
+### 8. Gestão de Manutenção
+  
+```{r manutencao-estrategias, echo=FALSE, message=FALSE, warning=FALSE} 
+
+estrategias_manut <- data.frame( Estrategia = c("Corretiva Pura", "Preventiva Básica", "Preventiva Avançada", "Preditiva"), Custo_Manut = c(0.45, 0.35, 0.30, 0.25), Tempo_Parado = c(15, 8, 5, 3), Investimento = c(0, 5000, 15000, 50000) )
+
+estrategias_manut$Custo_Total_Ano <- (estrategias_manut$Custo_Manut * 120000) + (estrategias_manut$Tempo_Parado * 500) # Custo de parada
+
+ggplot(estrategias_manut, aes(x = Estrategia, y = Custo_Total_Ano/1000)) +
+  geom_col(aes(fill = Estrategia), show.legend = FALSE) +
+  geom_text(aes(label = sprintf("R$ %.0f mil", Custo_Total_Ano/1000)), vjust = -0.5, size = 4) +
+  scale_fill_manual(values = c("#E63946", "#F77F00", "#06A77D", "#2E86AB")) +
+  labs(title = "Custo Total por Estratégia de Manutenção", subtitle = "Inclui custos diretos + custos de parada (120.000 km/ano)", x = "", y = "Custo Total Anual (R$ mil)") +
+  theme_minimal(base_size = 14)
+```
+
+---
+
+## Estratégias de Redução de Custos
+
+### 9. Rotas - Benefícios da Roteirização
+
+.pull-left[
+**Redução de km rodados**
+- Menor consumo
+- Menos desgaste
+- Economia: 8-12%
+
+**Consolidação de cargas**
+- Melhor aproveitamento
+- Menos viagens vazias
+- Economia: 10-15%
+]
+
+.pull-right[
+**Evitar horários de pico**
+- Menos tempo parado
+- Melhor consumo
+- Economia: 3-5%
+
+**Planejamento de pedágios**
+- Rotas alternativas
+- Negociação de contratos
+- Economia: 2-4%
+]
+
+---
+
+## Estratégias de Redução de Custos
+
+### 9. Rotas - pedágio
+
+```{r pedagios, echo=FALSE, message=FALSE, warning=FALSE} 
+
+rotas <- data.frame( Rota = c("SP - RJ", "SP - PR", "SP - MG", "RJ - MG", "PR - SC"), Distancia_km = c(435, 410, 590, 440, 300), Num_Pedagios = c(12, 8, 15, 10, 6), Custo_Total = c(256, 184, 320, 210, 138) )
+
+rotas <- rotas %>% mutate(Custo_km = Custo_Total / Distancia_km)
+
+ggplot(rotas, aes(x = reorder(Rota, -Custo_km), y = Custo_km)) + geom_col(fill = "#A23B72", alpha = 0.8) + geom_text(aes(label = sprintf("R$ %.3f", Custo_km)), vjust = -0.5, size = 4) + labs(title = "Custo de Pedágio por km em Diferentes Rotas", subtitle = "Baseado em veículo de 5 eixos", y = "Custo por km (R$/km)", x = "Rota") + theme_minimal(base_size = 14)
+```
+
+---
+
+## Estratégias de Redução de Custos
+
+### 9. Rotas - Ferramentas
+
+- Software de roteirização (TMS)
+- Análise de dados históricos
+- Integração com telemetria
+
+
+
+---
+
+## Estratégias de Redução de Custos
+
+### 10. Gestão de Pneus
+
+```{r gestao-pneus, echo=FALSE, message=FALSE, warning=FALSE}
+
+# Comparação de estratégias de pneus
+pneus_estrategia <- data.frame(Anos = 0:5, Sem_Recapagem = c(45000, 45000, 45000, 45000, 45000, 45000), Com_Recapagem = c(45000, 14400, 14400, 14400, 45000, 14400) )
+
+pneus_long <- pneus_estrategia %>% pivot_longer(cols = -Anos, names_to = "Estrategia", values_to = "Custo")
+
+pneus_long$Estrategia <- factor(pneus_long$Estrategia, levels = c("Sem_Recapagem", "Com_Recapagem"), labels = c("Apenas Pneus Novos", "Com Programa de Recapagem"))
+
+ggplot(pneus_long, aes(x = Anos, y = Custo, color = Estrategia, group = Estrategia)) + geom_line(size = 1.5) + geom_point(size = 3) + scale_y_continuous(labels = dollar_format(prefix = "R$ ")) + scale_color_manual(values = c("#E63946", "#06A77D")) + labs(title = "Comparação de Custos com Pneus ao Longo do Tempo", subtitle = "Programa de recapagem pode reduzir custos em até 60%", x = "Anos", y = "Custo Anual com Pneus", color = "Estratégia") + theme_minimal(base_size = 14) + theme(legend.position = "bottom")
+```
+---
+
+## Estratégias de Redução de Custos
+
+### 11. Negociação e Parcerias - Áreas de Negociação:
+
+| Item | Potencial de Economia | Ações |
+|------|----------------------|-------|
+| **Combustível** | 3-5% | Contratos com postos, bandeira branca |
+| **Seguros** | 10-15% | Cotações múltiplas, franquias inteligentes |
+| **Pedágios** | 5-10% | TAG automático, contratos corporativos |
+| **Manutenção** | 15-20% | Oficinas parceiras, peças alternativas |
+| **Pneus** | 20-30% | Contratos volume, recapagem própria |
+
+> **Volume é poder de barganha!** Cooperativas e grupos de transportadores conseguem descontos significativos através de compras conjuntas.
+
+---
+
+## Estudo de caso: Transportadora Regional
+
+.pull-left[
+### Situação Inicial:
+
+**Empresa:** Transportes São Paulo Ltda.  
+**Frota:** 15 caminhões (carretas 5 eixos)  
+**Operação:** SP ↔ Interior (raio de 800 km)  
+**km/mês por veículo:** 8.000 km  
+**Custo atual por km:** R$ 4,85
+]
+
+.pull-right[
+### Problemas Identificados:
+
+1. Alto consumo de combustível (2,8 km/l)
+2. Manutenção corretiva frequente
+3. Taxa de retorno vazio: 35%
+4. Sem telemetria ou controle de rota
+5. Renovação de pneus sem recapagem
+]
+
+---
+
+## Estudo de caso: Transportadora Regional
+
+### Análise de Custos - Situação Atual
+```{r caso-atual, echo=FALSE, message=FALSE, warning=FALSE}
+
+#Situação atual
+caso_atual <- data.frame( Componente = c("Combustível", "Manutenção", "Pneus", "Pedágios", "Depreciação", "Salários", "Seguros", "Outros"), Custo_km = c(2.32, 0.48, 0.15, 0.45, 0.42, 0.75, 0.21, 0.07), Percentual = c(47.8, 9.9, 3.1, 9.3, 8.7, 15.5, 4.3, 1.4) )
+
+caso_atual$Custo_Mensal <- caso_atual$Custo_km * 8000
+
+ggplot(caso_atual, aes(x = reorder(Componente, -Percentual), y = Percentual, fill = Componente)) + 
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(label = sprintf("%.1f%%\nR$ %.2f/km", Percentual, Custo_km)), vjust = -0.3, size = 3.5) + 
+  scale_fill_brewer(palette = "Set3") + 
+  labs(title = "Estrutura de Custos - Situação Atual", subtitle = "Custo Total: R$ 4,85/km | R$ 38.800/mês por veículo", x = "", y = "Percentual do Custo Total (%)") +
+  theme_minimal(base_size = 14) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+---
+
+## Estudo de caso: Transportadora Regional
+
+### Plano de Melhorias Proposto
+
+```{r plano-melhorias, echo=FALSE, message=FALSE, warning=FALSE} 
+melhorias <- data.frame( Acao = c("Implantação de Telemetria", "Treinamento de Motoristas", "Manutenção Preventiva", "Programa de Recapagem", "Otimização de Rotas", "Negociação Combustível"), Investimento = c(75000, 15000, 25000, 35000, 30000, 0), Economia_Anual = c(186000, 93000, 144000, 54000, 108000, 69000), Payback_meses = c(4.8, 1.9, 2.1, 7.8, 3.3, 0) )
+
+melhorias <- melhorias %>% arrange(Payback_meses)
+
+kable(melhorias, format = "html", col.names = c("Ação", "Investimento (R$)", "Economia Anual (R$)", "Payback (meses)"), format.args = list(big.mark = ".", decimal.mark = ",")) %>% kable_styling(bootstrap_options = c("striped", "hover")) %>% row_spec(which(melhorias$Payback_meses < 6), background = "#d4edda", color = "black")
+```
+**Total de Investimento:** R$ 180.000  
+**Economia Anual Projetada:** R$ 654.000  
+**Payback Médio:** 3,3 meses
+
+---
+
+## Estudo de caso: Transportadora Regional
+
+### Comparação: Antes vs. Depois
+
+```{r comparacao-final, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.width="40%"} 
+comparacao_final <- data.frame( Cenario = rep(c("Antes", "Depois"), each = 8), Componente = rep(c("Combustível", "Manutenção", "Pneus", "Pedágios", "Depreciação", "Salários", "Seguros", "Outros"), 2), Custo_km = c(2.32, 0.48, 0.15, 0.45, 0.42, 0.75, 0.21, 0.07)) # Antes 1.98, 0.35, 0.10, 0.40, 0.42, 0.75, 0.21, 0.07) # Depois )
+
+ggplot(comparacao_final, aes(x = Componente, y = Custo_km, fill = Cenario)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = c("Antes" = "#E63946", "Depois" = "#06A77D")) + 
+  labs(title = "Comparação de Custos por Componente", subtitle = "Redução total: R$ 4,85 → R$ 4,28/km (-11,8%)", x = "", y = "Custo (R$/km)") +
+  theme_minimal(base_size = 14) + theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "top")
+```
+
+**Economia mensal por veículo:** R$ 4.560  
+**Economia mensal na frota (15 veículos):** R$ 68.400  
+**Economia anual:** R$ 820.800
+
+---
+
+## Resultados do Estudo de Caso
+
+.pull-left[
+### Principais Conquistas:
+
+✅ **Redução de 11,8%** no custo por km  
+✅ **Melhoria de 18%** no consumo de combustível  
+✅ **Redução de 35%** em paradas não programadas  
+✅ **ROI de 328%** no primeiro ano  
+✅ **Aumento de 12%** na satisfação dos motoristas
+]
+
+.pull-right[
+### Fatores Críticos de Sucesso:
+
+1. **Engajamento da equipe** - Motoristas treinados e motivados
+2. **Monitoramento contínuo** - Acompanhamento diário via telemetria
+3. **Manutenção rigorosa** - Seguimento do plano preventivo
+4. **Análise de dados** - Decisões baseadas em informações reais
+5. **Melhoria contínua** - Ajustes constantes nas operações
+]
+
+---
+
+## Tecnologia e Inovação - Ferramentas Tecnológicas
+
+### Telemetria
+
+.pull-left[
+**Benefícios:**
+- Monitoramento em tempo real
+- Alertas de comportamento
+- Controle de jornada
+- Rastreamento de carga
+
+**ROI médio:** 6-8 meses
+]
+
+.pull-right[
+**Principais Métricas:**
+- Velocidade média
+- Consumo instantâneo
+- Tempo de marcha lenta
+- Frenagens bruscas
+- RPM do motor
+]
+
+---
+
+## Tecnologia e Inovação - Ferramentas Tecnológicas
+
+### TMS (Transport Management System)
+
+- Otimização de rotas
+- Gestão de frota
+- Controle financeiro
+- Integração com clientes
+- **Redução de custos:** 10-15%
+
+---
+
+## Tendências Futuras
+
+```{r tendencias, echo=FALSE, message=FALSE, warning=FALSE} 
+tendencias <- data.frame( Tecnologia = c("Veículos Elétricos", "Hidrogênio", "Condução Autônoma", "IoT e Big Data", "Blockchain"), Impacto_Custos = c(-25, -30, -40, -15, -8), Previsao = c("2028-2030", "2032-2035", "2030-2035", "2025-2027", "2026-2028") )
+
+ggplot(tendencias, aes(x = reorder(Tecnologia, Impacto_Custos), y = Impacto_Custos)) +
+  geom_col(aes(fill = Previsao)) +
+  geom_text(aes(label = sprintf("%d%%", Impacto_Custos)), hjust = 1.2, color = "white", size = 4, fontface = "bold") + coord_flip() + scale_fill_brewer(palette = "RdYlGn", direction = -1) +
+  labs(title = "Impacto Esperado de Novas Tecnologias nos Custos", subtitle = "Redução percentual projetada em relação aos custos atuais", x = "", y = "Redução de Custos (%)", fill = "Previsão de\nAdoção em Massa") +
+  theme_minimal(base_size = 14)
+```
+
+---
+
+## Principais Aprendizados
+
+.pull-left-wide[
+### 1. Estrutura de Custos
+
+- **Custos fixos** representam ~40% do total
+- **Combustível** é o maior componente variável (30-35%)
+- **Quilometragem** é fundamental para diluir custos fixos
+
+### 2. Oportunidades de Otimização
+
+- **Telemetria e treinamento:** 10-15% de economia em combustível
+- **Manutenção preventiva:** Redução de 30-40% em custos de manutenção
+- **Gestão de pneus:** Economia de até 60% com recapagem
+- **Roteirização:** 8-12% de redução em km rodados
+]
+
+.pull-right-narrow[
+
+### 3. Gestão Baseada em Dados
+
+- Controle rigoroso de indicadores
+- Análise contínua de performance
+- Benchmarking com mercado
+]
+
+---
+
+## Checklist de Gestão de Custos
+
+### Para implementar na sua operação:
+
+☑️ **Mapeamento completo** de todos os custos  
+☑️ **Sistema de monitoramento** em tempo real (telemetria)  
+☑️ **Programa de treinamento** contínuo para motoristas  
+☑️ **Plano de manutenção preventiva** rigoroso  
+☑️ **Gestão eficiente de pneus** com recapagem  
+☑️ **Otimização de rotas** com TMS  
+☑️ **Negociação estratégica** com fornecedores  
+☑️ **KPIs definidos** e acompanhamento mensal  
+☑️ **Revisão periódica** da estrutura de custos  
+☑️ **Investimento em tecnologia** com ROI calculado
+
+---
+
+# KPIs Essenciais
+```{r kpis, echo=FALSE, message=FALSE, warning=FALSE} 
+kpis <- data.frame( Indicador = c("Custo por km", "Consumo Médio", "Taxa de Ocupação", "Tempo de Manutenção", "Custo de Combustível/km", "Índice de Sinistralidade"), Meta = c("< R$ 4,50", "> 3,5 km/l", "> 85%", "< 5%", "< R$ 2,00", "< 2%"), Frequencia = c("Diária", "Diária", "Semanal", "Mensal", "Diária", "Mensal") )
+
+kable(kpis, format = "html", col.names = c("Indicador", "Meta", "Frequência de Medição")) %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+---
+
+class: middle
+
+# Equação do Sucesso
+
+.center[
+## Gestão Eficiente =  Controle de Custos + Otimização Contínua + Tecnologia
+]
+
+--
+
+<br>
+
+### Lembre-se:
+
+> **Uma redução de 5% nos custos pode representar um aumento de 20-30% na margem de lucro!**
+
+--
+
+<br>
+
+### Próximos Passos:
+
+1. **Diagnosticar** a situação atual da sua operação
+2. **Priorizar** as ações de maior impacto
+3. **Implementar** gradualmente as melhorias
+4. **Monitorar** resultados continuamente
+5. **Ajustar** estratégias conforme necessário
+
+---
+
+# Referências Bibliográficas
+
+### Principais Fontes:
+
+1. **CNT** - Confederação Nacional do Transporte
+   - Pesquisa de Custos e Tarifas do Transporte Rodoviário
+
+2. **ANTT** - Agência Nacional de Transportes Terrestres
+   - Tabelas de custos operacionais
+
+3. **FIPE** - Fundação Instituto de Pesquisas Econômicas
+   - Índices de preços
+
+4. **NTC&Logística**
+   - Manual de Cálculo de Custos e Formação de Preços do Transporte
+
+### Bibliografia Complementar:
+
+- BALLOU, Ronald H. *Logística Empresarial*
+- BOWERSOX, D.; CLOSS, D. *Logística Empresarial*
+- NOVAES, Antonio G. *Logística e Gerenciamento da Cadeia de Distribuição*
+
+---
+
+class: center, middle
+
+.huge[
+**DÚVIDAS?**
+]
+
+
+<!-- --- -->
+
+<!-- ## Cálculo Prático de Custos -->
+
+<!-- ### Planilha de Custos -->
+
+<!-- ```{r plan, echo=FALSE, message=FALSE, warning=FALSE} -->
+
+<!-- #Parâmetros do veículo -->
+<!-- km_mes <- 10000  -->
+<!-- dias_uteis <- 22 -->
+
+<!-- #Custos Fixos Mensais -->
+<!-- custos_fixos <- data.frame( Item = c("Depreciação", "Salário + Encargos", "Seguro Veículo", "Licenciamento (mensal)", "Administrativo", "TOTAL FIXO"), Valor = c(3333, 8550, 1667, 417, 1500, 15467) ) -->
+
+<!-- #Custos Variáveis por km -->
+<!-- custos_variaveis <- data.frame( Item = c("Combustível", "Manutenção", "Pneus", "Pedágio (média)", "Lavagem", "TOTAL VARIÁVEL (R$/km)"), Valor_km = c(1.86, 0.30, 0.12, 0.50, 0.02, 2.80) ) -->
+
+<!-- #Cálculo total -->
+<!-- custo_variavel_total <- 2.80 * km_mes  -->
+<!-- custo_total_mes <- 15467 + custo_variavel_total  -->
+<!-- custo_por_km <- custo_total_mes / km_mes -->
+
+<!-- cat("=== ESTRUTURA DE CUSTOS ===\n\n")  -->
+<!-- cat("CUSTOS FIXOS MENSAIS:\n")  -->
+<!-- print(kable(custos_fixos, format = "simple", col.names = c("Item", "Valor (R$)"))) -->
+
+<!-- cat("\n\nCUSTOS VARIÁVEIS:\n")  -->
+<!-- print(kable(custos_variaveis, format = "simple", col.names = c("Item", "Valor (R$/km)"))) -->
+
+<!-- cat(sprintf("\n\n=== RESUMO ===\n"))  -->
+<!-- cat(sprintf("km rodados/mês: %d\n", km_mes))  -->
+<!-- cat(sprintf("Custo Fixo Total: R$ %.2f\n", 15467))  -->
+<!-- cat(sprintf("Custo Variável Total: R$ %.2f\n", custo_variavel_total))  -->
+<!-- cat(sprintf("CUSTO TOTAL MENSAL: R$ %.2f\n", custo_total_mes))  -->
+<!-- cat(sprintf("CUSTO POR km: R$ %.2f\n", custo_por_km)) -->
+<!-- ``` -->
+
+
+
+
