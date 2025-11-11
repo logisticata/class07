@@ -637,7 +637,7 @@ caso_atual$Custo_Mensal <- caso_atual$Custo_km * 8000
 
 ggplot(caso_atual, aes(x = reorder(Componente, -Percentual), y = Percentual, fill = Componente)) + 
   geom_col(show.legend = FALSE) +
-  geom_text(aes(label = sprintf("%.1f%%\nR$ %.2f/km", Percentual, Custo_km)), vjust = -1, size = 3.5) + 
+  geom_text(aes(label = sprintf("%.1f%%\nR$ %.2f/km", Percentual, Custo_km)), vjust = 0.5, size = 3.5) + 
   scale_fill_brewer(palette = "Set3") + 
   labs(title = "Estrutura de Custos - Situação Atual", subtitle = "Custo Total: R$ 4,85/km | R$ 38.800/mês por veículo", x = "", y = "Percentual do Custo Total (%)") +
   theme_minimal(base_size = 14) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -666,8 +666,9 @@ kable(melhorias, format = "html", col.names = c("Ação", "Investimento (R$)", "
 
 ### Comparação: Antes vs. Depois
 
-```{r comparacao-final, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.width="40%"} 
-comparacao_final <- data.frame( Cenario = rep(c("Antes", "Depois"), each = 8), Componente = rep(c("Combustível", "Manutenção", "Pneus", "Pedágios", "Depreciação", "Salários", "Seguros", "Outros"), 2), Custo_km = c(2.32, 0.48, 0.15, 0.45, 0.42, 0.75, 0.21, 0.07)) # Antes 1.98, 0.35, 0.10, 0.40, 0.42, 0.75, 0.21, 0.07) # Depois )
+.pull-left-wide[
+```{r comparacao-final, echo=FALSE, message=FALSE, warning=FALSE} 
+comparacao_final <- data.frame( Cenario = rep(c("Antes", "Depois"), each = 8), Componente = rep(c("Combustível", "Manutenção", "Pneus", "Pedágios", "Depreciação", "Salários", "Seguros", "Outros"), 2), Custo_km = c(2.32, 0.48, 0.15, 0.45, 0.42, 0.75, 0.21, 0.07, 1.98, 0.35, 0.10, 0.40, 0.42, 0.75, 0.21, 0.07)) # Depois )
 
 ggplot(comparacao_final, aes(x = Componente, y = Custo_km, fill = Cenario)) +
   geom_col(position = "dodge") +
@@ -676,9 +677,13 @@ ggplot(comparacao_final, aes(x = Componente, y = Custo_km, fill = Cenario)) +
   theme_minimal(base_size = 14) + theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "top")
 ```
 
+]
+
+.pull-right-narrow[
 **Economia mensal por veículo:** R$ 4.560  
 **Economia mensal na frota (15 veículos):** R$ 68.400  
 **Economia anual:** R$ 820.800
+]
 
 ---
 
@@ -812,23 +817,13 @@ kable(kpis, format = "html", col.names = c("Indicador", "Meta", "Frequência de 
 
 class: middle
 
-# Equação do Sucesso
+### Equação do Sucesso
 
 .center[
-## Gestão Eficiente =  Controle de Custos + Otimização Contínua + Tecnologia
+Gestão Eficiente =  Controle de Custos + Otimização Contínua + Tecnologia
 ]
 
---
-
-<br>
-
-### Lembre-se:
-
 > **Uma redução de 5% nos custos pode representar um aumento de 20-30% na margem de lucro!**
-
---
-
-<br>
 
 ### Próximos Passos:
 
@@ -840,21 +835,21 @@ class: middle
 
 ---
 
-# Referências Bibliográficas
+## Referências Bibliográficas
 
 ### Principais Fontes:
 
-1. **CNT** - Confederação Nacional do Transporte
-   - Pesquisa de Custos e Tarifas do Transporte Rodoviário
-
-2. **ANTT** - Agência Nacional de Transportes Terrestres
-   - Tabelas de custos operacionais
-
+1. **CNT** - Confederação Nacional do Transporte - Pesquisa de Custos e Tarifas do Transporte Rodoviário
+2. **ANTT** - Agência Nacional de Transportes Terrestres - Tabelas de custos operacionais
 3. **FIPE** - Fundação Instituto de Pesquisas Econômicas
    - Índices de preços
-
 4. **NTC&Logística**
    - Manual de Cálculo de Custos e Formação de Preços do Transporte
+
+
+---
+
+## Referências Bibliográficas
 
 ### Bibliografia Complementar:
 
